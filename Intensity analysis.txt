@@ -1,0 +1,56 @@
+run("Color Picker..."); 
+setForegroundColor(0, 0, 0);
+setBackgroundColor(0, 0, 0);
+run("Close");
+run("Set Measurements...", "area mean integrated display scientific redirect=None decimal=0");
+print("F", "N", "Area", "Mean", "IntDen", "CTCF");
+pt = getDirectory("Welcome to Colocalization Macro. Choose your working directory! ");
+count = 1; 
+listFiles(pt); 
+function listFiles(pt) {
+	list = getFileList(pt);
+	for (q=0; q<list.length; q++) {
+		if (endsWith(list[q], ".tif"))
+		n=((count++));
+	}
+	for (i=1; i<=n ; i++) {
+		ima = pt+i+".tif"; 
+		rroi = pt+i+".roi";
+		proi = pt+i+".zip";
+		open(ima); 
+		run("Split Channels");
+		close();
+		close();
+		open(rroi);
+		run("Measure");
+		mf = getResult("Mean", 0);
+		open(proi); 
+		nROIs = roiManager("count");
+		j = 0;
+		while (j< nROIs){
+			roiManager("Select", j);
+			run("Measure");
+			k = j+1;
+			Mean = getResult("Mean", k);
+			IntD = getResult("IntDen", k);
+			Area = getResult("Area", k);
+			CTCF = (IntD - (Area*mf));
+			print(i, j, Area, Mean, IntD, CTCF);
+			setResult("CTCF", k, CTCF);
+			updateResults();
+			j = j+1;
+		}
+			if (isOpen("ROI Manager")) {
+				selectWindow("ROI Manager");
+				run("Close");
+			}
+		close();
+		saveAs("Measurements", pt+"Intensity"+i+".xls");
+		selectWindow ("Results");
+		run ("Close");
+
+	}	
+}
+selectWindow("Log");
+saveAs("Text", pt+"Intensity.dat");
+run ("Close");
